@@ -1,4 +1,4 @@
-playercreate = function(name, cost, n){
+playercreate = function(name, cost, n, starting){
   library("readxl")
   playerexcel = read_excel("D:/Dev/PredBasketball/lebjam.xlsx", sheet = name) 
   
@@ -31,8 +31,24 @@ playercreate = function(name, cost, n){
   player = cbind(cost, exp(fieldgoal)-10, threepoints, exp(rebounds)-10, exp(total.assists)-10, steals, blocks, exp(turnover)-10, total.percent)
   score = player%*%weights
   player =cbind(player, score)
+  player.dist =cbind(cost, mean(player[,10]), sd(player[,10])) 
+  player.dist = cbind(signif(player.dist, digits = 3), starting)
   
-  colnames(player) = c("cost", "2pt", "3pt", "rebounds", "assists", "steals", "blocks", "turnover", "T%", "points")
-  return(signif(player, digits = 3))
+  #colnames(player) = c("cost", "2pt", "3pt", "rebounds", "assists", "steals", "blocks", "turnover", "T%", "points")
+  colnames(player.dist) = c("cost", "mean", "sd", "starting")
+  rownames(player.dist) = c(name)
+  return(player.dist) 
 }
 
+teamcombos = function(){
+  pg.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="PG")
+  sg.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="SG")
+  sf.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="SF")
+  pf.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="PF")
+  c.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="C")
+  g.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="G")
+  f.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="F")
+  util.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="UTIL")
+  
+  
+}

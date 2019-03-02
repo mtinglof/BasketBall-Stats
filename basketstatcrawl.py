@@ -71,13 +71,22 @@ class basketstatcrawl:
             self.writer.save()
         except NoSuchElementException:
             winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
-            print("Were we 404'ed?")
+            print("Refresh / Score Current Player / Score Next Player")
+            print("r / s / n")
             error = input()
-            print("y or n")
             if (error == "y"):
                 self.browser.implicitly_wait(10)
                 self.browser.refresh()
                 self.open(name)
+            elif(error is "s"): 
+                table = self.browser.find_element_by_xpath("//table[@id='pgl_basic']")
+                df = pd.read_html(table.get_attribute("outerHTML"))[0]
+                df['FG'].replace('', np.nan, inplace=True)
+                df['FG'].replace('FG', np.nan, inplace=True)
+                df.dropna(subset=['FG'], inplace=True)
+                df[['FG', '3P', 'FT', 'TRB', 'AST', 'STL', 'BLK', 'TOV']] = df[['FG', '3P', 'FT', 'TRB', 'AST', 'STL', 'BLK', 'TOV']].apply(pd.to_numeric)
+                df.to_excel(self.writer, name)
+                self.writer.save()
             else:
                 pass
 

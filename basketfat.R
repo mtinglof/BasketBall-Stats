@@ -1,6 +1,7 @@
 playercreate = function(name, cost, n, starting){
   library("readxl")
-  playerexcel = read_excel("D:/Dev/PredBasketball/lebjam.xlsx", sheet = name) 
+  path = "D:/Dev/PredBasketball/BasketBall-Stats/PlayerExport.xlsx"
+  playerexcel = read_excel(path=path, sheet = name) 
   
   player.fieldgoal = playerexcel$FG + 10
   player.rebounds = playerexcel$TRB + 10
@@ -31,24 +32,25 @@ playercreate = function(name, cost, n, starting){
   player = cbind(cost, exp(fieldgoal)-10, threepoints, exp(rebounds)-10, exp(total.assists)-10, steals, blocks, exp(turnover)-10, total.percent)
   score = player%*%weights
   player =cbind(player, score)
-  player.dist =cbind(cost, mean(player[,10]), sd(player[,10])) 
-  player.dist = cbind(signif(player.dist, digits = 3), starting)
+  #player.dist =cbind(cost, mean(player[,10]), sd(player[,10])) 
+  #player.dist = cbind(signif(player.dist, digits = 3), starting)
   
-  #colnames(player) = c("cost", "2pt", "3pt", "rebounds", "assists", "steals", "blocks", "turnover", "T%", "points")
-  colnames(player.dist) = c("cost", "mean", "sd", "starting")
-  rownames(player.dist) = c(name)
-  return(player.dist) 
+  colnames(player) = c("cost", "2pt", "3pt", "rebounds", "assists", "steals", "blocks", "turnover", "T%", "points")
+  #colnames(player.dist) = c("cost", "mean", "sd", "starting")
+  #rownames(player.dist) = c(name)
+  return(player) 
 }
 
-teamcombos = function(){
-  pg.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="PG")
-  sg.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="SG")
-  sf.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="SF")
-  pf.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="PF")
-  c.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="C")
-  g.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="G")
-  f.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="F")
-  util.data = read_excel("D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx", sheet="UTIL")
+teamcombos = function(n){
+  path = "D:/Dev/PredBasketball/MILvSAC-NOvLAL.xlsx"
+  pg.data = read_excel(path=path, sheet="PG")
+  sg.data = read_excel(path=path, sheet="SG")
+  sf.data = read_excel(path=path, sheet="SF")
+  pf.data = read_excel(path=path, sheet="PF")
+  c.data = read_excel(path=path, sheet="C")
+  g.data = read_excel(path=path, sheet="G")
+  f.data = read_excel(path=path, sheet="F")
+  util.data = read_excel(path=path, sheet="UTIL")
   
-  
+  pg.player = pg.data[sample(1:dim(pg.data)[0], n, TRUE),]
 }

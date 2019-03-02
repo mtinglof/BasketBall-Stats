@@ -27,38 +27,59 @@ class basketstatcrawl:
     def getplayertable(self):
         self.browser.create_options()
         self.browser.get(self.starting_url)
-        names = open("D:/Dev/PredBasketball/Names.txt", "r")
-        [self.open(player) for player in names]
+        names = pd.read_excel('MILvSAC-NOvLAL.xlsx', sheet_name='ALL')
+        [self.open(player) for player in names['Name']]
 
     def open(self, name):
         try:
             searchbar = self.browser.find_element_by_xpath("//input[@tabindex='1']")
-            searchbar.send_keys(name[0:-1])
+            searchbar.send_keys(name)
             searchbar.send_keys(Keys.RETURN)
             try:
                 self.browser.find_element_by_xpath("//tr[@id='per_game.2019.clone']").click()
             except NoSuchElementException:
-                winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
-                print("Please resolve error. Probably name error?")
-                input()
                 try:
-                    self.browser.find_element_by_xpath("//tr[@id='per_game.2019.clone']").click()
-                except NoSuchElementException:
                     maintable = self.browser.find_element_by_xpath("//div[@id='all_per_game']")
                     tablelist = maintable.find_elements(By.TAG_NAME, "th")
                     tablelist[-2].click()
+                except NoSuchElementException:
+                    foundplayers = self.browser.find_elements_by_partial_link_text(name)
+                    if(len(foundplayers)>1):
+                        winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
+                        print("Looks like a two name error. Press enter when done")
+                        input()
+                    else:
+                        self.browser.find_element_by_partial_link_text(name).click()
+                    try:
+                        self.browser.find_element_by_xpath("//tr[@id='per_game.2019.clone']").click()
+                    except NoSuchElementException:
+                        try:
+                            maintable = self.browser.find_element_by_xpath("//div[@id='all_per_game']")
+                            tablelist = maintable.find_elements(By.TAG_NAME, "th")
+                            tablelist[-2].click()
+                        except NoSuchElementException:
+                            winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
+                            print("Something is wrong")
+                            input()
             table = self.browser.find_element_by_xpath("//table[@id='pgl_basic']")
             df = pd.read_html(table.get_attribute("outerHTML"))[0]
             df['FG'].replace('', np.nan, inplace=True)
             df['FG'].replace('FG', np.nan, inplace=True)
             df.dropna(subset=['FG'], inplace=True)
+            df[['FG', '3P', 'FT', 'TRB', 'AST', 'STL', 'BLK', 'TOV']] = df[['FG', '3P', 'FT', 'TRB', 'AST', 'STL', 'BLK', 'TOV']].apply(pd.to_numeric)
             df.to_excel(self.writer, name)
             self.writer.save()
         except NoSuchElementException:
             winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
             print("Were we 404'ed?")
-            input()
-            self.open(name)
+            error = input()
+            print("y or n")
+            if (error == "y"):
+                self.browser.implicitly_wait(10)
+                self.browser.refresh()
+                self.open(name)
+            else:
+                pass
 
         
 test = basketstatcrawl('https://www.basketball-reference.com/')

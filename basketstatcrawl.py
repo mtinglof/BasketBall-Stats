@@ -27,7 +27,7 @@ class basketstatcrawl:
     def getplayertable(self):
         self.browser.create_options()
         self.browser.get(self.starting_url)
-        names = pd.read_excel('MILvSAC-NOvLAL.xlsx', sheet_name='ALL')
+        names = pd.read_excel('INDvMIL-OKCvPOR.xlsx', sheet_name='ALL')
         [self.open(player) for player in names['Name']]
 
     def open(self, name):

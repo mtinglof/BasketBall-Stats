@@ -47,11 +47,12 @@ playercreate = function(name, n){
 
 playergen = function(n){
   library("readxl")
-  path = "D:/Dev/PredBasketball/BasketBall-Stats/MILvSAC-NOvLAL.xlsx"
-  all.data = read_excel(path=path, sheet="ALL")
-  all.player = matrix(data=NA, nrow = dim(all.data)[1], ncol = 2)
+  library("xlsx")
+  path = "D:/Dev/PredBasketball/BasketBall-Stats/INDvMIL-OKCvPOR.xlsx"
+  all.playerdata = read_excel(path=path, sheet="ALL")
+  all.player = matrix(data=NA, nrow = dim(all.playerdata)[1], ncol = 2)
   i = 1
-  for(name in all.data$Name){
+  for(name in all.playerdata$Name){
     player = playercreate(name, n)
     all.player[i, 1] = player[1, 1]
     all.player[i, 2] = player[1, 2]
@@ -59,6 +60,7 @@ playergen = function(n){
   }
   #rownames(all.player) = all.data$Name
   colnames(all.player) = c("Mean", "SD")
+  #write.xlsx(all.player, "D:/Dev/PredBasketball/BasketBall-Stats/Combos.xlsx", sheet = "mean.sd", append = TRUE) 
   return(all.player)
 }
 
@@ -72,9 +74,11 @@ playercheck = function(name){
   return(c(mean(playerpoints), sd(playerpoints)))
 }
 
-playercombos = function(n, gensize){
+playercombos = function(groupsize, breaksize, gensize, starters)
+  {
   library("readxl")
-  path = "D:/Dev/PredBasketball/BasketBall-Stats/MILvSAC-NOvLAL.xlsx"
+  library("xlsx")
+  path = "D:/Dev/PredBasketball/BasketBall-Stats/INDvMIL-OKCvPOR.xlsx"
   all.data = read_excel(path=path, sheet="ALL")
   
   pg.index = which(all.data$Position %in% c("PG", "PG/SG", "PG/SF"))
@@ -89,21 +93,47 @@ playercombos = function(n, gensize){
   generated.data = playergen(gensize)
   all.data = cbind(all.data, generated.data)
   
-  highscore = 0
-  finalsheet = 0
-  j = 0 
-  index = (unique(c(sample(pg.index, n, replace = T), sample(sg.index, n, replace = T), sample(sf.index, n, replace = T), sample(pf.index, n, replace = T), sample(c.index, n, replace = T), 
-    sample(g.index, n, replace = T), sample(f.index, n, replace = T), sample(util.index, n, replace = T))))
-  index = (matrix(index, nrow = n, ncol = 8))
-  for(i in 1:n){
-    combopoints = sum(all.data$Mean[index[i,]]*(all.data$SD[index[i,]]*2))
-    combocost = sum(all.data$Salary[index[i,]])
-    if((combopoints > highscore) & (combocost < 50001)){
-      finalteam = t(all.data$Name[index[i,]])
-      finalteam = cbind(finalteam, combopoints)
-      finalsheet[j] = finalteam
-      j = j + 1
+  finalcombo = matrix(numeric(0), nrow=1, ncol=11)
+  collections = 0
+  while (collections < groupsize)
+    {
+    finalsheet = matrix(numeric(0), nrow=1, ncol=11)
+    limit = 0 
+    start.time = proc.time()[3]
+    while(limit < breaksize)
+      {
+      index = c(1:7)
+      while(length(index)<=7)
+        {
+        index = (unique(c(sample(pg.index, 1, replace = T), sample(sg.index, 1, replace = T), sample(sf.index, 1, replace = T), sample(pf.index, 1, replace = T), sample(c.index, 1, replace = T), 
+                          sample(g.index, 1, replace = T), sample(f.index, 1, replace = T), sample(util.index, 1, replace = T))))
+      }
+      sd.multi = matrix(abs(rnorm(8, mean=0, sd=1)), nrow = 8, ncol = 1)
+      combopoints = sum(all.data$Mean[index])
+      #*(all.data$SD[index]*sd.multi))
+      combocost = sum(all.data$Salary[index])
+      #total.percent = prod(1+(.5-pnorm(sd.multi)))
+      starting.number = sum(all.data$Starting[index])
+      if((combocost < 50001) & (starting.number > starters))
+        {
+        finalteam = matrix(all.data$Name[index], nrow=1, ncol=8)
+        finalteam = cbind(finalteam, starting.number, signif(combopoints, 5), signif(sum(all.data$SD[index]), 4))
+        #signif(total.percent, 3)
+        finalsheet = rbind(finalsheet, finalteam)
+        limit = limit + 1
+        #time.estimate = proc.time()[3] - start.time
+        #time.estimate = paste((time.estimate*(breaksize-limit))/60, "minutes")
+        #print(time.estimate)
+      }
     }
+    #finalscores = sort(finalsheet[,10], decreasing = T)[2:11]
+    #finalsheet = subset(finalsheet, finalsheet[,10] %in% c(finalscores))
+    finalcombo = rbind(finalsheet, finalcombo)
+    collections = collections + 1 
+    time.estimate = proc.time()[3] - start.time
+    time.estimate = paste((time.estimate*(groupsize-collections))/60, "minutes")
+    print(time.estimate)
   }
-  return(finalsheet)
+  write.xlsx(t(finalcombo), "D:/Dev/PredBasketball/BasketBall-Stats/Combos.xlsx", sheet = "combos", append = FALSE) 
+  return()
 }

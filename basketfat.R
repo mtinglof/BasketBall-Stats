@@ -108,19 +108,23 @@ playercombos = function(groupsize, breaksize, gensize, starters)
         index = (unique(c(sample(pg.index, 1, replace = T), sample(sg.index, 1, replace = T), sample(sf.index, 1, replace = T), sample(pf.index, 1, replace = T), sample(c.index, 1, replace = T), 
                           sample(g.index, 1, replace = T), sample(f.index, 1, replace = T), sample(util.index, 1, replace = T))))
       }
-      sd.multi = matrix(abs(rnorm(8, mean=0, sd=1)), nrow = 8, ncol = 1)
-      combopoints = sum(all.data$Mean[index])
-      #*(all.data$SD[index]*sd.multi))
+      #combopoints = sum(all.data$Mean[index])
       combocost = sum(all.data$Salary[index])
-      #total.percent = prod(1+(.5-pnorm(sd.multi)))
       starting.number = sum(all.data$Starting[index])
+      
+      #sd.multi = matrix(abs(rnorm(8, mean=0, sd=1)), nrow = 8, ncol = 1)
+      #*(all.data$SD[index]*sd.multi))
+      #total.percent = prod(1+(.5-pnorm(sd.multi)))
+      
       if((combocost < 50001) & (starting.number > starters))
         {
         finalteam = matrix(all.data$Name[index], nrow=1, ncol=8)
         finalteam = cbind(finalteam, starting.number, signif(combopoints, 5), signif(sum(all.data$SD[index]), 4))
-        #signif(total.percent, 3)
         finalsheet = rbind(finalsheet, finalteam)
         limit = limit + 1
+        
+        #signif(total.percent, 3)
+        
         #time.estimate = proc.time()[3] - start.time
         #time.estimate = paste((time.estimate*(breaksize-limit))/60, "minutes")
         #print(time.estimate)

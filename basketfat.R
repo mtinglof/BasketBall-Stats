@@ -92,9 +92,12 @@ playercombos = function(groupsize, breaksize, gensize, starters)
   
   generated.data = playergen(gensize)
   all.data = cbind(all.data, generated.data)
+  weighted.avg = ((((all.data$Mean/(all.data$Salary/100))^2)*all.data$Mean)+all.data$Mean)^2
+  all.data = cbind(all.data, weighted.avg)
   
   finalcombo = matrix(numeric(0), nrow=1, ncol=11)
   collections = 0
+  last.time = 1000
   while (collections < groupsize)
     {
     finalsheet = matrix(numeric(0), nrow=1, ncol=11)
@@ -108,7 +111,6 @@ playercombos = function(groupsize, breaksize, gensize, starters)
         index = (unique(c(sample(pg.index, 1, replace = T), sample(sg.index, 1, replace = T), sample(sf.index, 1, replace = T), sample(pf.index, 1, replace = T), sample(c.index, 1, replace = T), 
                           sample(g.index, 1, replace = T), sample(f.index, 1, replace = T), sample(util.index, 1, replace = T))))
       }
-      #combopoints = sum(all.data$Mean[index])
       combocost = sum(all.data$Salary[index])
       starting.number = sum(all.data$Starting[index])
       
@@ -118,6 +120,9 @@ playercombos = function(groupsize, breaksize, gensize, starters)
       
       if((combocost < 50001) & (starting.number > starters))
         {
+        #combopoints = sum(all.data$Mean[index])
+        
+        combopoints = sum(all.data$weighted.avg[index])
         finalteam = matrix(all.data$Name[index], nrow=1, ncol=8)
         finalteam = cbind(finalteam, starting.number, signif(combopoints, 5), signif(sum(all.data$SD[index]), 4))
         finalsheet = rbind(finalsheet, finalteam)
@@ -130,14 +135,45 @@ playercombos = function(groupsize, breaksize, gensize, starters)
         #print(time.estimate)
       }
     }
-    #finalscores = sort(finalsheet[,10], decreasing = T)[2:11]
-    #finalsheet = subset(finalsheet, finalsheet[,10] %in% c(finalscores))
+    finalscores = sort(finalsheet[,10], decreasing = T)[2:11]
+    finalsheet = subset(finalsheet, finalsheet[,10] %in% c(finalscores))
     finalcombo = rbind(finalsheet, finalcombo)
     collections = collections + 1 
-    time.estimate = proc.time()[3] - start.time
-    time.estimate = paste((time.estimate*(groupsize-collections))/60, "minutes")
-    print(time.estimate)
+    time.estimate = round(((proc.time()[3] - start.time)*(groupsize-collections))/60)
+    if (time.estimate < last.time){
+      if (time.estimate < 1){
+        print("Less than a minute")
+        last.time = time.estimate
+      }
+      else{
+        print(paste(time.estimate, "minutes"))
+        last.time = time.estimate
+      }
+    }
   }
-  write.xlsx(t(finalcombo), "D:/Dev/PredBasketball/BasketBall-Stats/Combos.xlsx", sheet = "combos", append = FALSE) 
+  finalscore = sort(finalcombo[,10], decreasing = T)[1:50]
+  final.sub = subset(finalcombo, finalcombo[,10] %in% c(finalscore))
+  write.xlsx((final.sub), "D:/Dev/PredBasketball/BasketBall-Stats/Combos.xlsx", sheet = "combos", append = FALSE)
   return()
+}
+
+playerspread = function(groupsize, breaksize, gensize, starters, keepsize, spreadsize, sizeofspread){
+  playergroup = playercombos(groupsize, breaksize, gensize, starters)
+  playerscores = sort(playergroup[,10], decreasing = T)[1:keepsize]
+  playersort = subset(playergroup, playergroup[,10] %in% c(playerscores))
+  write.xlsx((playersort), "D:/Dev/PredBasketball/BasketBall-Stats/Combos.xlsx", sheet = "combos", append = FALSE)
+  names = unique(c(playersort[,1:8]))
+  print(paste(length(names), "unique names"))
+  
+  collected = 0 
+  finalspread = matrix(numeric(0), nrow=1, ncol=spreadsize+2)
+  while(collected < sizeofspread){
+    index = sample(keepsize, spreadsize)
+    playersample = playersort[index,1:8]
+    uniplayers = sum(as.numeric(names %in% playersample))
+    playerspread = matrix(c(index, uniplayers, sum(as.numeric(playersort[index, 10]))), nrow = 1, ncol = spreadsize +2)
+    finalspread = rbind(finalspread, playerspread)
+    collected = collected + 1
+  }
+  return(finalspread)
 }
